@@ -29,7 +29,34 @@ void show_info(struct utmp *utbufp)
     printf("\n");
 }
 
+int loggout(char *line)
+{
+	int out,in;
+	
+        struct utmp ut;
+	int ret=0;
+	int len=sizeof(struct utmp);
+	if((in=open(UTMP_FILE,O_RDONLY))==-1)
+	{
+		perror("ERRO:cant open file");
+		return 0;
+	}
+	while(ret=read(in,&ut,len)!=0)
+	{
+		if(strcmp(ut.ut_user,line)==0)
+		{
+                    ut.ut_type=DEAD_PROCESS;
+		    lseek(in,-len,SEEK_CUR);
+		    if(write(in,&ut,len)==len)
+                    ret=1;
+		    break;
+		}
+	}
+	close(in);
+	return ret;
+}
 
+	
 
 int main()
 {
@@ -46,7 +73,9 @@ int main()
 	{
 	show_info(&current_record);
 	}
-	close(utmpfd);
+	//close(utmpfd);
+	int r=loggout("lord");
+	printf("ret=%d",r);
 	return 0;
 }
 
